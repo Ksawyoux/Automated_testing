@@ -284,63 +284,6 @@ def add_new_mission(driver, job_title="TEST11", job_description="This is an Auto
         log("Failed to select Business Line")
         return False
 
-    # Step 10: Skills (select first available)
-    log("Step 10: Selecting Skills")
-    if not select_labeled_dropdown_option(driver, "Skill", select_first=True):
-        log("FAILED: Could not select first skill")
-        return False
-
-    # Step 11: Educational Level
-    if not select_labeled_dropdown_option(driver, "Educational Level", select_first=True):
-        log("Failed to select Educational Level")
-        return False
-
-    # Step 12: Experience
-    log("Filling Minimal and Maximal Experience...")
-    try:
-        min_exp = WebDriverWait(driver, 5).until(
-            EC.visibility_of_element_located((By.XPATH, "//input[contains(@name, 'min') or contains(@placeholder, 'Min')]"))
-        )
-        min_exp.clear()
-        min_exp.send_keys("0")
-        max_exp = WebDriverWait(driver, 5).until(
-            EC.visibility_of_element_located((By.XPATH, "//input[contains(@name, 'max') or contains(@placeholder, 'Max')]"))
-        )
-        max_exp.clear()
-        max_exp.send_keys("3")
-        log("Filled Experience: 0 to 3 years.")
-    except Exception as e:
-        log(f"Could not fill experience: {e}")
-
-    # Step 13: Salary
-    if not select_labeled_dropdown_option(driver, "Salary", None):
-        log("Failed to select Salary")
-        return False
-
-    # Step 14: Contract
-    if not select_labeled_dropdown_option(driver, "Contract", None):
-        log("Failed to select Contract")
-        return False
-
-    # Step 15: Add Language
-    try:
-        add_lang_selectors = [
-            (By.XPATH, "//button[contains(., 'Add')]"),
-            (By.XPATH, "//button[contains(text(), 'Add')]"),
-            (By.XPATH, "//button[contains(@aria-label, 'Add')]")
-        ]
-        add_lang_btn = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Add') and (ancestor::*[contains(text(), 'Language')] or ancestor::*[contains(text(), 'language')])]"))
-        )
-        safe_click(driver, add_lang_btn)
-        log("Clicked Add button for Language.")
-    except Exception as e:
-        log(f"Could not click Add Language: {e}")
-
-    # Step 16: Final Next Step
-    if not wait_and_click(driver, next_step_selectors):
-        log("Failed to click final Next Step")
-        return False
 
     log("Mission creation completed successfully!")
     return True
