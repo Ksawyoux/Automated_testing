@@ -466,6 +466,7 @@ def select_country(driver, country):
         log(f"Error selecting country {country}: {e}", "ERROR")
         return False
 
+<<<<<<< HEAD
 def select_city(driver, city):
     """Specialized function for selecting city"""
     log(f"Selecting city: {city}")
@@ -531,6 +532,23 @@ def wait_for_page_load(driver, timeout=30):
     except Exception as e:
         log(f"Error waiting for page load: {e}", "ERROR")
         return False
+=======
+    # Step 7: City
+    if not select_labeled_dropdown_option(driver, "City", "Ifrane", search_text="Ifrane"):
+        log("Failed to select City")
+        return False
+
+    # Step 8: Next Step
+    if not wait_and_click(driver, next_step_selectors):
+        log("Failed to click Next Step again")
+        return False
+
+    # Step 9: Business Line
+    if not select_labeled_dropdown_option(driver, "Business Line", select_first=True):
+        log("Failed to select Business Line")
+        return False
+
+>>>>>>> dcb5d6ae5d306ca5e4e9343ab16c8fdbed6fe37e
 
 def handle_popup(driver):
     """Handle any popup dialogs that might appear"""

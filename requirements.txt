@@ -1,5 +1,9 @@
 selenium>=4.0.0
+<<<<<<< HEAD
 crewai>=0.28.7
 google-generativeai>=0.10.0
 python-dotenv>=1.0.0
 webdriver-manager>=4.0.0
+=======
+crewai>=0.1.32
+>>>>>>> dcb5d6ae5d306ca5e4e9343ab16c8fdbed6fe37e
