@@ -1,15 +1,15 @@
 import os
 from login import login_with_selenium
-from add_mission import add_new_mission
+from add_qualified_talent import main as add_qualified_talent
 from dotenv import load_dotenv
-from Testing_report_agent import TerminalReportGenerator
+from testing_report import TerminalReportGenerator
 
 load_dotenv()
 
 def run_selenium_tests():
     results = []
-    username = os.getenv("KWIKS_USERNAME")
-    password = os.getenv("KWIKS_PASSWORD")
+    username = os.getenv("USERNAME")
+    password = os.getenv("PASSWORD")
     if not username or not password:
         raise Exception("Please set KWIKS_USERNAME and KWIKS_PASSWORD environment variables.")
     try:
@@ -19,10 +19,10 @@ def run_selenium_tests():
         results.append(f"Test: Login - FAILED ({e})")
         return results
     try:
-        add_new_mission(driver)
-        results.append("Test: Add New Mission - PASSED")
+        add_qualified_talent()
+        results.append("Test: Add Qualified Talent - PASSED")
     except Exception as e:
-        results.append(f"Test: Add New Mission - FAILED ({e})")
+        results.append(f"Test: Add Qualified Talent - FAILED ({e})")
     input("Press Enter to close the browser...")
     driver.quit()
     return results

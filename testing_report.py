@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+
+
 class TerminalReportGenerator:
     """Terminal-based test report generator using Gemini AI."""
     
@@ -17,7 +19,7 @@ class TerminalReportGenerator:
         
         # Configure Gemini
         genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel("models/gemini-2.5-flash")
+        self.model = genai.GenerativeModel("models/gemini-1.5-flash")
     
     def get_test_results_input(self):
         """Get test results from command line arguments or stdin."""
