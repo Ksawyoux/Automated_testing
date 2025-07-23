@@ -3,5 +3,4 @@ crewai>=0.28.7
 google-generativeai>=0.10.0
 python-dotenv>=1.0.0
 webdriver-manager>=4.0.0
-=======
-crewai>=0.1.32
+crewai[gemini]>=0.28.7

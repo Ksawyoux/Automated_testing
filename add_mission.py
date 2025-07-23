@@ -10,7 +10,6 @@ from selenium.common.exceptions import TimeoutException, ElementClickIntercepted
 from selenium.webdriver.common.action_chains import ActionChains
 from dotenv import load_dotenv
 
-# --- CONFIGURATION ---
 load_dotenv()
 
 USERNAME_Clt = os.getenv("USERNAME_Clt")
@@ -361,8 +360,8 @@ def fill_job_title_and_generate_description(driver, job_title="QA Engineer", tim
 
             if safe_click(driver, final_generate_button):
                 log("Clicked final 'Generate' button")
-                # Wait 7 seconds before proceeding to the Next Step
-                time.sleep(7)
+                # Wait 10 seconds before proceeding to the Next Step
+                time.sleep(10)
 
                 # After generation, proceed by clicking 'Next Step'
                 next_step_selectors = [

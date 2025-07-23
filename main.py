@@ -1,5 +1,4 @@
 import os
-from login import login_with_selenium
 from add_qualified_talent import main as add_qualified_talent
 from add_mission import main as add_mission
 from dotenv import load_dotenv
@@ -9,16 +8,6 @@ load_dotenv()
 
 def run_selenium_tests():
     results = []
-    username = os.getenv("USERNAME_FR")
-    password = os.getenv("PASSWORD")
-    if not username or not password:
-        raise Exception("Please set KWIKS_USERNAME and KWIKS_PASSWORD environment variables.")
-    try:
-        driver = login_with_selenium(username, password)
-        results.append("Test: Login - PASSED")
-    except Exception as e:
-        results.append(f"Test: Login - FAILED ({e})")
-        return results
     try:
         add_qualified_talent()
         results.append("Test: Add Qualified Talent - PASSED")
@@ -31,9 +20,22 @@ def run_selenium_tests():
     except Exception as e:
         results.append(f"Test: Add Mission - FAILED ({e})")
     input("Press Enter to close the browser...")
-    driver.quit()
     return results
 
 if __name__ == "__main__":
     test_results = run_selenium_tests()
+
+    # Generate AI report automatically
+    try:
+        generator = TerminalReportGenerator()
+        results_text = "\n".join(test_results)
+        report_md = generator.generate_report(results_text)
+        
+        report_filename = "test_report.md"
+        with open(report_filename, "w", encoding="utf-8") as f:
+            f.write(report_md)
+        print(f"✅ Test report saved to {report_filename}")
+    except Exception as e:
+        print(f"⚠️ Could not generate AI report: {e}")
+        print("Raw test results:\n", "\n".join(test_results))
     
