@@ -241,8 +241,8 @@ def main():
         else:
             logger.log_problem("Failed to click 'Browse Files' button.")
 
-        logger.log_step("Waiting 40 seconds before clicking 'Next Step' after uploading CV.")
-        time.sleep(40)
+        logger.log_step("Waiting 4 seconds before clicking 'Next Step' after uploading CV.")
+        time.sleep(4)
 
         wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Next Step')]")))
         next_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Next Step')]")
@@ -261,7 +261,7 @@ def main():
         except Exception as e:
             logger.log_problem(f"Failed to click second Next Step before filling form fields: {e}")
 
-        time.sleep(60)
+        time.sleep(4)
         wait_for_next_step(driver)
         fill_form_step(driver, logger, wait, 1)
 
@@ -303,7 +303,7 @@ def main():
                     else:
                         logger.log_problem(f"Next Step {step} button did not work or did not get to next step!")
                 if step < 7:
-                    time.sleep(30)
+                    time.sleep(4)
             except Exception as e:
                 logger.log_problem(f"Step {step}: Exception - {e}")
                 break
