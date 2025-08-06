@@ -1,6 +1,8 @@
 import time
 import os
 import logging
+import random
+import google.generativeai as genai
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -14,11 +16,18 @@ from dotenv import load_dotenv
 load_dotenv()
 USERNAME_FR = os.getenv("USERNAME_FR")
 PASSWORD = os.getenv("PASSWORD")
-LOGIN_URL = "https://preprod.kwiks.io/login"
+LOGIN_URL = "https://preprod.kwiks.io/auth/login"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 if not USERNAME_FR or not PASSWORD:
     print("[ERROR] USERNAME_FR or PASSWORD environment variable is not set. Please check your .env file.")
     exit(1)
+
+# Configure Gemini API
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+else:
+    print("[WARNING] GEMINI_API_KEY not set. Will use fallback name generation.")
 
 # --- LOGGING SETUP ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -32,6 +41,69 @@ def log(msg, level="INFO"):
         logger.warning(f"[{timestamp}] {msg}")
     else:
         logger.info(f"[{timestamp}] {msg}")
+
+def generate_random_name():
+    """Generate a random first name using Gemini API or fallback."""
+    if GEMINI_API_KEY:
+        try:
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            prompt = "Generate a single realistic first name (only the name, no explanation). Make it sound like a real person's name."
+            response = model.generate_content(prompt)
+            name = response.text.strip()
+            # Clean up the response to get just the name
+            if name and len(name) < 50:  # Reasonable name length
+                log(f"Generated name using Gemini API: {name}")
+                return name
+        except Exception as e:
+            log(f"Gemini API failed: {e}", "WARNING")
+    
+    # Fallback names if Gemini API fails or is not configured
+    fallback_names = [
+        "Alex", "Jordan", "Taylor", "Casey", "Morgan", "Riley", "Quinn", "Avery", 
+        "Blake", "Cameron", "Drew", "Emery", "Finley", "Gray", "Harper", "Indigo",
+        "Jamie", "Kendall", "Logan", "Mason", "Noah", "Olivia", "Parker", "Quinn",
+        "Rowan", "Sage", "Tyler", "Unity", "Vale", "Winter", "Xander", "Yuki", "Zara"
+    ]
+    fallback_name = random.choice(fallback_names)
+    log(f"Using fallback name: {fallback_name}")
+    return fallback_name
+
+def find_and_fill_first_name(driver, logger):
+    """Find the first name field and fill it with a random name."""
+    first_name = generate_random_name()
+    first_name_selectors = [
+        "//input[@placeholder='First Name']",
+        "//input[contains(@placeholder, 'First Name')]",
+        "//input[@data-ddg-inputtype='identities.firstName']",
+        "//input[contains(@class, 'chakra-input') and contains(@placeholder, 'First Name')]",
+        "//input[contains(@placeholder, 'First')]",
+        "//input[contains(@placeholder, 'first')]",
+        "//input[contains(@id, 'first')]",
+        "//input[contains(@name, 'first')]",
+        "//label[contains(text(), 'First Name')]/following-sibling::input",
+        "//label[contains(text(), 'first')]/following-sibling::input",
+        "//label[contains(text(), 'First Name')]/following-sibling::*/input",
+        "//label[contains(text(), 'first')]/following-sibling::*/input"
+    ]
+    
+    for selector in first_name_selectors:
+        try:
+            first_name_field = driver.find_element(By.XPATH, selector)
+            if first_name_field.is_displayed():
+                if safe_send_keys(driver, first_name_field, first_name):
+                    logger.log_step(f"Successfully filled first name field with: {first_name}")
+                    return True
+                else:
+                    logger.log_problem("Failed to fill first name field")
+                    return False
+        except NoSuchElementException:
+            continue
+        except Exception as e:
+            continue
+    
+    logger.log_problem("Could not find first name field with any selector")
+    return False
+
 
 def safe_click(driver, element, max_retries=3):
     for attempt in range(max_retries):
@@ -167,7 +239,7 @@ def fill_form_step(driver, logger, wait, step_number):
     else:
         logger.log_problem(f"Step {step_number}: Failed to select Contract type")
 
-def wait_for_next_step(driver, timeout=30):
+def wait_for_next_step(driver, timeout=15):
     try:
         WebDriverWait(driver, timeout).until_not(
             EC.presence_of_element_located((By.CSS_SELECTOR, ".loading, .spinner, [class*='load']"))
@@ -188,8 +260,12 @@ class AutomationLogger:
         self.problems = []
     def log_step(self, description):
         self.steps.append(description)
+        # Print step information immediately with a running count for real-time visibility
+        print(f"[STEP {len(self.steps)}] {description}")
     def log_problem(self, description):
         self.problems.append(description)
+        # Print problems immediately so they are visible while the automation runs
+        print(f"[PROBLEM] {description}")
     def save(self):
         with open(self.log_path, "w", encoding="utf-8") as f:
             f.write("# Automation Log\n\n")
@@ -241,8 +317,8 @@ def main():
         else:
             logger.log_problem("Failed to click 'Browse Files' button.")
 
-        logger.log_step("Waiting 4 seconds before clicking 'Next Step' after uploading CV.")
-        time.sleep(4)
+        logger.log_step("Waiting 30 seconds before clicking 'Next Step' after uploading CV.")
+        time.sleep(30)
 
         wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Next Step')]")))
         next_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Next Step')]")
@@ -250,6 +326,14 @@ def main():
             logger.log_step("Clicked first Next Step after upload")
         else:
             logger.log_problem("First 'Next Step' button did not work or did not get to next step!")
+
+        # Wait for the page to load after first Next Step
+        time.sleep(15)
+        wait_for_next_step(driver)
+        
+        # Look for and fill first name field
+        logger.log_step("Looking for first name field after first Next Step")
+        find_and_fill_first_name(driver, logger)
 
         try:
             wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Next Step')]")))
@@ -267,27 +351,38 @@ def main():
 
         for step in range(1, 8):
             try:
-                note_field = None
-                possible_selectors = [
-                    "//label[contains(text(), \"Head Hunter's Note\")]/following-sibling::textarea",
-                    "//textarea"
-                ]
-                for selector in possible_selectors:
-                    try:
-                        note_field = WebDriverWait(driver, 10).until(
-                            EC.visibility_of_element_located((By.XPATH, selector))
-                        )
-                        if note_field:
-                            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", note_field)
-                            break
-                    except Exception:
-                        continue
-                if note_field:
-                    note_text = "a business analyst and good AI knowledgeable in general, a perfect condidate"
-                    if safe_send_keys(driver, note_field, note_text):
-                        logger.log_step("Filled 'Head Hunter's Note' field with candidate description.")
+                # Fill note field only on step 6 (where it appears)
+                if step == 6:
+                    logger.log_step(f"Step {step}: Looking for Head Hunter's Note field")
+                    note_field = None
+                    possible_selectors = [
+                        "//textarea",
+                    ]
+                    
+                    for i, selector in enumerate(possible_selectors):
+                        try:
+                            logger.log_step(f"Step {step}: Trying selector {i+1}: {selector}")
+                            note_field = WebDriverWait(driver, 5).until(
+                                EC.visibility_of_element_located((By.XPATH, selector))
+                            )
+                            if note_field and note_field.is_displayed():
+                                logger.log_step(f"Step {step}: Found textarea with selector {i+1}")
+                                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", note_field)
+                                time.sleep(1)
+                                break
+                        except Exception as e:
+                            logger.log_problem(f"Step {step}: Selector {i+1} failed: {e}")
+                            continue
+                    
+                    if note_field:
+                        note_text = "a business analyst and good AI knowledgeable in general, a perfect candidate"
+                        logger.log_step(f"Step {step}: Attempting to fill note field with: {note_text}")
+                        if safe_send_keys(driver, note_field, note_text):
+                            logger.log_step(f"Step {step}: Successfully filled 'Head Hunter's Note' field with candidate description.")
+                        else:
+                            logger.log_problem(f"Step {step}: Failed to fill 'Head Hunter's Note' field!")
                     else:
-                        logger.log_problem("Failed to fill 'Head Hunter's Note' field!")
+                        logger.log_problem(f"Step {step}: Could not find any textarea field for Head Hunter's Note!")
                 if step == 7:
                     wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Save Talent')]")))
                     save_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Save Talent')]")
@@ -303,7 +398,12 @@ def main():
                     else:
                         logger.log_problem(f"Next Step {step} button did not work or did not get to next step!")
                 if step < 7:
-                    time.sleep(4)
+                    if step == 1 or step == 2:  # First and Second Next Steps
+                        time.sleep(15)
+                    elif step == 3:  # Third Next Step
+                        time.sleep(15)
+                    else:  # Steps 4, 5, 6
+                        time.sleep(4)
             except Exception as e:
                 logger.log_problem(f"Step {step}: Exception - {e}")
                 break

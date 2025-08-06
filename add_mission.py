@@ -77,7 +77,7 @@ def login(driver):
         driver.get(LOGIN_URL)
 
         # Give the page a second to start rendering
-        time.sleep(1)
+        time.sleep(0.5)
 
         # Possible selectors for the email input
         email_selectors = [
@@ -175,10 +175,10 @@ def click_add_new_mission(driver, timeout=15):
         
         # Common selectors for "Add New Mission" button - try multiple approaches
         selectors = [
-            "//p[contains(text(), 'Add New Mission')]",  # Added <p> tag selector
-            "//p[contains(text(), 'Add New Mission')]/ancestor::*[self::button or @role='button'][1]",  # Clickable ancestor of <p>
+            "//p[contains(text(), 'Add New Hiring Process')]",  # Added <p> tag selector
+            "//p[contains(text(), 'Add New Hiring Process')]/ancestor::*[self::button or @role='button'][1]",  # Clickable ancestor of <p>
             "//*[contains(@class, 'add-mission') or contains(@id, 'add-mission')]",
-            "//button[contains(@aria-label, 'Add New Mission')]",
+            "//button[contains(@aria-label, 'Add New Hiring Process')]",
             "//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'add new mission')]"
         ]
         
@@ -248,7 +248,7 @@ def safe_send_keys(driver, element, text, clear_first=True):
         log(f"Failed to send keys: {e}", "ERROR")
         return False
 
-def fill_job_title_and_generate_description(driver, job_title="QA Engineer", timeout=15):
+def fill_job_title_and_generate_description(driver, job_title="Analyst Engineer Test", timeout=15):
     """Fill the Job Title field and click the Generate Description button"""
     try:
         log("Looking for Job Title input field")
@@ -312,7 +312,7 @@ def fill_job_title_and_generate_description(driver, job_title="QA Engineer", tim
 
             # Locate the description textarea
             textarea_selectors = [
-                "//textarea[@placeholder='short description..']",  # explicit placeholder
+                "//textarea[@placeholder='short description..']", 
                 "//textarea[contains(translate(@placeholder, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'description')]",  # any description placeholder
                 "//textarea",
             ]
@@ -361,7 +361,7 @@ def fill_job_title_and_generate_description(driver, job_title="QA Engineer", tim
             if safe_click(driver, final_generate_button):
                 log("Clicked final 'Generate' button")
                 # Wait 10 seconds before proceeding to the Next Step
-                time.sleep(10)
+                time.sleep(5)
 
                 # After generation, proceed by clicking 'Next Step'
                 next_step_selectors = [
@@ -380,8 +380,8 @@ def fill_job_title_and_generate_description(driver, job_title="QA Engineer", tim
                         continue
 
                 if next_button and safe_click(driver, next_button):
-                    log("Clicked 'Next Step' button, waiting 5 seconds before next actions")
-                    time.sleep(3)
+                    log("Clicked 'Next Step' button, waiting 2 seconds before next actions")
+                    time.sleep(1)
                     return True
                 else:
                     log("Failed to click 'Next Step' button", "ERROR")
@@ -434,8 +434,8 @@ def set_work_model_and_location(driver, work_model="On-Site", country="Morocco",
     """Set Work Model radio and choose Country & City in the next step"""
     try:
         # Wait briefly for new step
-        time.sleep(2)
-        log("Selecting Work Model")
+        time.sleep(1)
+        # Removed noisy INFO log
         work_model_selectors = [
             f"//span[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{work_model.lower()}')]/ancestor::*[self::label or self::div or self::button][1]",
             f"//*[contains(text(), '{work_model}')]/preceding::span[@class='chakra-radio__control'][1]",
@@ -443,7 +443,7 @@ def set_work_model_and_location(driver, work_model="On-Site", country="Morocco",
         work_elem = None
         for selector in work_model_selectors:
             try:
-                log(f"Trying Work Model selector: {selector}")
+                # Reduced noisy logs
                 work_elem = WebDriverWait(driver, timeout).until(
                     EC.element_to_be_clickable((By.XPATH, selector))
                 )
@@ -473,7 +473,7 @@ def set_work_model_and_location(driver, work_model="On-Site", country="Morocco",
         next_button = None
         for selector in next_step_selectors:
             try:
-                log(f"Trying Next Step selector: {selector}")
+                # Reduced noisy logs
                 next_button = WebDriverWait(driver, timeout).until(
                     EC.element_to_be_clickable((By.XPATH, selector))
                 )
@@ -482,8 +482,8 @@ def set_work_model_and_location(driver, work_model="On-Site", country="Morocco",
                 continue
 
         if next_button and safe_click(driver, next_button):
-            log("Clicked 'Next Step' button after location, waiting 5 seconds")
-            time.sleep(5)
+            log("Clicked 'Next Step' button after location, waiting 2 seconds")
+            time.sleep(1)
             return True
         else:
             log("Failed to click 'Next Step' button after location", "ERROR")
@@ -496,7 +496,7 @@ def set_work_model_and_location(driver, work_model="On-Site", country="Morocco",
 def set_business_details(driver, timeout=15):
     """Fill Business Line, Skills, Education, Salary, Contract, click Add and Next Step"""
     try:
-        time.sleep(2)
+        time.sleep(1)
         # Business Line
         if not select_dropdown_option(driver, "Business Line", "Information Technology & Software", timeout):
             return False
@@ -569,8 +569,8 @@ def set_business_details(driver, timeout=15):
             log("Failed to click final Next Step", "ERROR")
             return False
 
-        log("Clicked final Next Step, waiting 5 seconds")
-        time.sleep(5)
+        log("Clicked final Next Step, waiting 2 seconds")
+        time.sleep(2)
 
         # Now click Publish
         publish_selectors = [

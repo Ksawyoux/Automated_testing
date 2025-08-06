@@ -27,3 +27,4 @@ def send_email_with_report(to_email, subject, body, attachment_path):
         smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
         smtp.send_message(msg)
     print(f"Report sent to {to_email}")
+    
